@@ -20,11 +20,26 @@ const server = http.createServer((req, res) => {
         let body = '';
         req.on('data', chunk => { body += chunk.toString(); });
         req.on('end', () => {
-            const { job, skills } = JSON.parse(body);
+            // 1. フロントから送られてきたデータ（job, skills, lang）を受け取る
+            const { job, skills, lang } = JSON.parse(body);
 
+            // 2. 言語設定に合わせて、AIへの「振る舞い」の指示を変える（ここがVer 2.0の肝！）
+            let langInstruction = "";
+            if(lang === 'en') {
+                langInstruction = "Write the proposal in English. Use direct and professional business English suitable for Western markets (US/Europe). Focus on value proposition and clarity. Do not use over-polite Japanese-style expressions.";
+            } else if(lang === 'zh') {
+                langInstruction = "请用中文（简体）撰写。风格要专业、高效、重点突出。";
+            } else {
+                langInstruction = "日本語で、丁寧かつプロフェッショナルなビジネス敬語を使って作成してください。";
+            }
+
+            // 3. 最終的な命令文（プロンプト）を組み立てる
             const promptMessage = `
-あなたは獲得率100%を誇る伝説のフリーランスWebエンジニアです。
-以下の【案件募集文】に対して、私の【所有スキル・武器】を最大限に活かした最強の提案文を作成してください。
+あなたは世界を股にかける、獲得率100%の伝説のフリーランスWebエンジニアです。
+以下の【案件内容】に対し、私の【スキル・武器】を最大限にアピールした、選ばれるための最強の提案文を作成してください。
+
+【出力言語とスタイルの指定】
+${langInstruction}
 
 【案件募集文】
 ${job}
