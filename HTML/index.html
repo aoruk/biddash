@@ -3,31 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BidDash v2.0 - Strategic Communication</title>
+    <title>BidDash v2.2 - Global Intelligence</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        body { 
-            font-family: 'Inter', sans-serif; 
-            background-color: #020617; /* より深いネイビー */
-            color: #f1f5f9;
-        }
-        .glass { 
-            background: rgba(15, 23, 42, 0.6); 
-            backdrop-filter: blur(20px); 
-            border: 1px solid rgba(255, 255, 255, 0.05); 
-        }
-        .input-area {
-            background: rgba(2, 6, 23, 0.8);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            transition: all 0.3s ease;
-        }
-        .input-area:focus {
-            border-color: #3b82f6;
-            background: rgba(2, 6, 23, 1);
-            outline: none;
-        }
-        /* スムーズなスクロール */
+        body { font-family: 'Inter', sans-serif; background-color: #020617; color: #f1f5f9; }
+        .glass { background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.05); }
+        .input-area { background: rgba(2, 6, 23, 0.8); border: 1px solid rgba(255, 255, 255, 0.1); transition: all 0.3s ease; }
+        .input-area:focus { border-color: #3b82f6; background: rgba(2, 6, 23, 1); outline: none; }
         .custom-scroll::-webkit-scrollbar { width: 4px; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
     </style>
@@ -36,30 +19,34 @@
 
     <header class="w-full max-w-6xl flex justify-between items-center mb-12">
         <div class="space-y-1">
-            <h1 class="text-2xl font-bold tracking-tight text-white">BidDash <span class="text-blue-500 font-medium">2.0</span></h1>
+            <h1 class="text-2xl font-bold tracking-tight text-white">BidDash <span class="text-blue-500 font-medium">2.2</span></h1>
             <p class="text-[10px] uppercase tracking-[0.2em] text-blue-400/60 font-semibold">Global Business Communication Engine</p>
         </div>
         <div class="flex items-center gap-4 bg-slate-900/50 p-1 rounded-lg border border-slate-800">
             <select id="lang-select" class="bg-transparent text-xs font-medium px-4 py-2 outline-none cursor-pointer text-slate-300 hover:text-white transition-colors">
-                <option value="ja">JP / 日本語</option>
-                <option value="en">US / ENGLISH</option>
-                <option value="zh">CN / CHINESE</option>
+                <option value="ja">🇯🇵 JAPANESE</option>
+                <option value="en">🇺🇸 ENGLISH</option>
+                <option value="zh">🇨🇳 CHINESE</option>
             </select>
         </div>
     </header>
 
     <main class="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-12 gap-8">
-        
         <section class="lg:col-span-5 space-y-8">
             <div class="glass p-8 rounded-3xl space-y-6 shadow-2xl">
                 <div>
                     <label class="text-[11px] uppercase tracking-wider text-slate-500 font-bold mb-3 block">Source Content</label>
-                    <textarea id="job-description" class="input-area w-full h-48 rounded-2xl p-4 text-sm text-slate-200 resize-none" placeholder="Paste the target message or job details..."></textarea>
+                    <textarea id="job-description" class="input-area w-full h-48 rounded-2xl p-4 text-sm text-slate-200 resize-none" placeholder="Paste the target message..."></textarea>
+                    
+                    <div id="job-translation-container" class="hidden mt-2 p-4 bg-blue-500/5 border border-white/5 rounded-xl">
+                        <span class="text-[9px] uppercase tracking-widest text-blue-400 font-bold block mb-1">Quick Interpretation</span>
+                        <div id="job-translation-text" class="text-xs text-slate-400 italic leading-relaxed"></div>
+                    </div>
                 </div>
                 
                 <div>
                     <label class="text-[11px] uppercase tracking-wider text-slate-500 font-bold mb-3 block">Strategy / Skills</label>
-                    <textarea id="my-skills" class="input-area w-full h-32 rounded-2xl p-4 text-sm text-slate-200 resize-none" placeholder="Your advantages and specific conditions..."></textarea>
+                    <textarea id="my-skills" class="input-area w-full h-32 rounded-2xl p-4 text-sm text-slate-200 resize-none" placeholder="Your advantages..."></textarea>
                 </div>
                 
                 <button id="generate-btn" class="w-full bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold uppercase tracking-widest py-5 rounded-2xl transition-all active:scale-95 shadow-lg shadow-blue-500/10">
@@ -69,8 +56,7 @@
 
             <div class="px-4">
                 <h3 class="text-[11px] uppercase tracking-wider text-slate-600 font-bold mb-4">Activity Logs</h3>
-                <div id="history-area" class="space-y-3">
-                    </div>
+                <div id="history-area" class="space-y-3"></div>
             </div>
         </section>
 
@@ -82,6 +68,12 @@
                         Copy to Clipboard
                     </button>
                 </div>
+
+                <div id="summary-container" class="hidden px-8 py-4 border-b border-white/5 bg-blue-500/5">
+                    <span class="text-[10px] uppercase tracking-wider text-blue-400 font-bold block mb-1">Translation</span>
+                    <div id="summary-text" class="text-xs text-slate-400 leading-relaxed italic"></div>
+                </div>
+
                 <div id="output-text" class="p-8 text-sm text-slate-300 leading-relaxed overflow-y-auto h-[540px] custom-scroll">
                     <div class="h-full flex items-center justify-center text-slate-600">
                         <p class="text-xs uppercase tracking-widest italic">Waiting for input parameters...</p>
@@ -92,162 +84,165 @@
     </main>
 
     <script>
-    // --- 1. 定数・変数の定義 ---
-    const generateBtn = document.getElementById('generate-btn');
-    const jobDescription = document.getElementById('job-description');
-    const mySkills = document.getElementById('my-skills');
-    const outputText = document.getElementById('output-text');
-    const copyBtn = document.getElementById('copy-btn');
-    const historyArea = document.getElementById('history-area');
-    const langSelect = document.getElementById('lang-select');
+        const generateBtn = document.getElementById('generate-btn');
+        const jobDescription = document.getElementById('job-description');
+        const mySkills = document.getElementById('my-skills');
+        const outputText = document.getElementById('output-text');
+        const copyBtn = document.getElementById('copy-btn');
+        const historyArea = document.getElementById('history-area');
+        const langSelect = document.getElementById('lang-select');
+        const summaryContainer = document.getElementById('summary-container');
+        const summaryText = document.getElementById('summary-text');
+        const jobTransContainer = document.getElementById('job-translation-container');
+        const jobTransText = document.getElementById('job-translation-text');
 
-    // UI多言語化用の辞書データ
-    const uiText = {
-        ja: {
-            sourceLabel: "1. 案件募集文 / 受信メッセージ",
-            assetsLabel: "2. 戦略 / 所有スキル",
-            generateBtn: "提案文を爆速で生成する",
-            outputLabel: "生成された最強の提案書",
-            historyLabel: "アクティビティログ",
-            placeholderSource: "ターゲットのメッセージや案件詳細を貼り付けてください...",
-            placeholderSkills: "あなたの強みや具体的な条件を定義してください...",
-            waiting: "入力待ち...",
-            processing: "生成中...",
-            copied: "コピー完了"
-        },
-        en: {
-            sourceLabel: "1. Source Content / Message",
-            assetsLabel: "2. Strategy / Personal Assets",
-            generateBtn: "Execute Generation",
-            outputLabel: "Strategic Drafted Proposal",
-            historyLabel: "Activity Logs",
-            placeholderSource: "Paste the target message or job details...",
-            placeholderSkills: "Define your advantages and specific conditions...",
-            waiting: "Waiting for input...",
-            processing: "Processing...",
-            copied: "Copied"
-        },
-        zh: {
-            sourceLabel: "1. 目标内容 / 收到消息",
-            assetsLabel: "2. 个人优势 / 技能技能",
-            generateBtn: "立即生成提案",
-            outputLabel: "生成的战略提案",
-            historyLabel: "活动日志",
-            placeholderSource: "粘贴目标消息或工作详情...",
-            placeholderSkills: "定义您的优势和具体条件...",
-            waiting: "等待输入...",
-            processing: "生成中...",
-            copied: "已复制"
-        }
-    };
+        const uiText = {
+            ja: {
+                sourceLabel: "1. 案件募集文 / 受信メッセージ",
+                assetsLabel: "2. 戦略 / 所有スキル",
+                generateBtn: "提案文を爆速で生成する",
+                outputLabel: "生成された最強の提案書",
+                historyLabel: "アクティビティログ",
+                placeholderSource: "ターゲットのメッセージや案件詳細を貼り付けてください...",
+                placeholderSkills: "あなたの強みや具体的な条件を定義してください...",
+                processing: "生成中...",
+                copied: "コピー完了",
+                transLabel: "全文翻訳"
+            },
+            en: {
+                sourceLabel: "1. Source Content / Message",
+                assetsLabel: "2. Strategy / Personal Assets",
+                generateBtn: "Execute Generation",
+                outputLabel: "Strategic Drafted Proposal",
+                historyLabel: "Activity Logs",
+                placeholderSource: "Paste the target message or job details...",
+                placeholderSkills: "Define your advantages and specific conditions...",
+                processing: "Processing...",
+                copied: "Copied",
+                transLabel: "Full Translation"
+            },
+            zh: {
+                sourceLabel: "1. 目标内容 / 收到消息",
+                assetsLabel: "2. 个人优势 / 技能技能",
+                generateBtn: "立即生成提案",
+                outputLabel: "生成的战略提案",
+                historyLabel: "活动日志",
+                placeholderSource: "粘贴目标消息或工作详情...",
+                placeholderSkills: "定义您的优势和具体条件...",
+                processing: "生成中...",
+                copied: "已复制",
+                transLabel: "全文翻译"
+            }
+        };
 
-    // --- 2. 初期化処理 ---
-    window.onload = () => {
-        displayHistory();
-        updateUI(); // 初期表示の言語合わせ
-    };
+        window.onload = () => { displayHistory(); updateUI(); };
+        langSelect.addEventListener('change', updateUI);
 
-    // --- 3. イベントリスナー ---
+        // 募集文の入力検知（デバウンス翻訳）
+        let timer;
+        jobDescription.addEventListener('input', () => {
+            clearTimeout(timer);
+            timer = setTimeout(async () => {
+                const text = jobDescription.value.trim();
+                if (text.length < 5) { jobTransContainer.classList.add('hidden'); return; }
+                try {
+                    const response = await fetch('http://localhost:3000/translate-source', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ text: text, targetLang: langSelect.value })
+                    });
+                    const data = await response.json();
+                    jobTransText.innerText = data.translatedText;
+                    jobTransContainer.classList.remove('hidden');
+                } catch (e) { console.error("Translate error"); }
+            }, 1000);
+        });
 
-    // 言語切り替え時のUI更新
-    langSelect.addEventListener('change', updateUI);
+        generateBtn.addEventListener('click', async () => {
+            const jobText = jobDescription.value.trim();
+            const skillText = mySkills.value.trim();
+            const lang = langSelect.value;
+            const t = uiText[lang];
 
-    // 生成ボタンクリック時
-    generateBtn.addEventListener('click', async () => {
-        const jobText = jobDescription.value.trim();
-        const skillText = mySkills.value.trim();
-        const lang = langSelect.value;
-        const t = uiText[lang];
+            if (!jobText || !skillText) return;
 
-        if (!jobText || !skillText) return;
+            generateBtn.disabled = true;
+            generateBtn.innerHTML = t.processing;
+            outputText.innerHTML = `<div class="h-full flex items-center justify-center"><p class="animate-pulse text-blue-400/50 text-xs uppercase tracking-widest font-bold">${t.processing}</p></div>`;
+            summaryContainer.classList.add('hidden');
+            copyBtn.classList.add('hidden');
 
-        // 状態の更新
-        generateBtn.disabled = true;
-        generateBtn.innerHTML = t.processing;
-        outputText.innerHTML = `<div class="h-full flex items-center justify-center"><p class="animate-pulse text-blue-400/50 text-xs uppercase tracking-widest font-bold">${t.processing}</p></div>`;
-        copyBtn.classList.add('hidden');
+            try {
+                const response = await fetch('http://localhost:3000/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ job: jobText, skills: skillText, lang: lang })
+                });
+                const data = await response.json();
+                outputText.innerHTML = `<div class="whitespace-pre-wrap">${data.proposal}</div>`;
+                if (data.translation && data.translation !== "") {
+                    summaryText.innerText = data.translation;
+                    summaryContainer.classList.remove('hidden');
+                }
+                copyBtn.classList.remove('hidden');
+                saveToHistory(data.proposal);
+            } catch (error) {
+                outputText.innerHTML = "System Error: Connection failed.";
+            } finally {
+                generateBtn.disabled = false;
+                generateBtn.innerHTML = t.generateBtn;
+            }
+        });
 
-        try {
-            const response = await fetch('http://localhost:3000/generate', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ job: jobText, skills: skillText, lang: lang })
+        copyBtn.addEventListener('click', () => {
+            const lang = langSelect.value;
+            navigator.clipboard.writeText(outputText.innerText).then(() => {
+                const originalText = copyBtn.innerHTML;
+                copyBtn.innerHTML = uiText[lang].copied;
+                setTimeout(() => { copyBtn.innerHTML = originalText; }, 2000);
             });
+        });
 
-            const data = await response.json();
-            const aiReply = data.choices[0].message.content;
+        function updateUI() {
+            const lang = langSelect.value;
+            const t = uiText[lang];
+            const options = langSelect.options;
 
-            // 結果表示
-            outputText.innerHTML = `<div class="whitespace-pre-wrap">${aiReply}</div>`;
-            copyBtn.classList.remove('hidden');
-            
-            // 履歴に保存
-            saveToHistory(aiReply);
+            if (lang === 'ja') {
+                options[0].text = "🇯🇵 日本語"; options[1].text = "🇺🇸 英語"; options[2].text = "🇨🇳 中国語";
+            } else {
+                options[0].text = "🇯🇵 JAPANESE"; options[1].text = "🇺🇸 ENGLISH"; options[2].text = "🇨🇳 CHINESE";
+            }
 
-        } catch (error) {
-            outputText.innerHTML = "System Error: Connection failed.";
-        } finally {
-            generateBtn.disabled = false;
-            generateBtn.innerHTML = t.generateBtn;
+            const labels = document.querySelectorAll('label');
+            labels[0].innerText = t.sourceLabel;
+            labels[1].innerText = t.assetsLabel;
+            generateBtn.innerText = t.generateBtn;
+            document.querySelector('span.text-slate-400').innerText = t.outputLabel;
+            document.querySelector('h3.text-slate-600').innerText = t.historyLabel;
+            document.querySelector('#summary-container span').innerText = t.transLabel;
+            jobDescription.placeholder = t.placeholderSource;
+            mySkills.placeholder = t.placeholderSkills;
         }
-    });
 
-    // コピーボタンクリック時
-    copyBtn.addEventListener('click', () => {
-        const lang = langSelect.value;
-        navigator.clipboard.writeText(outputText.innerText).then(() => {
-            const originalText = copyBtn.innerHTML;
-            copyBtn.innerHTML = uiText[lang].copied;
-            setTimeout(() => { copyBtn.innerHTML = originalText; }, 2000);
-        });
-    });
+        function saveToHistory(text) {
+            let history = JSON.parse(localStorage.getItem('biddash_history') || '[]');
+            history.unshift({ text, date: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) });
+            history = history.slice(0, 5);
+            localStorage.setItem('biddash_history', JSON.stringify(history));
+            displayHistory();
+        }
 
-    // --- 4. 関数定義 ---
-
-    // UIのテキストを一括更新する
-    function updateUI() {
-        const lang = langSelect.value;
-        const t = uiText[lang];
-
-        // ラベルの更新（クラス名で特定）
-        const labels = document.querySelectorAll('label');
-        labels[0].innerText = t.sourceLabel;
-        labels[1].innerText = t.assetsLabel;
-
-        // ボタンとタイトルの更新
-        generateBtn.innerText = t.generateBtn;
-        document.querySelector('span.text-slate-400').innerText = t.outputLabel;
-        document.querySelector('h3.text-slate-600').innerText = t.historyLabel;
-
-        // プレースホルダーの更新
-        jobDescription.placeholder = t.placeholderSource;
-        mySkills.placeholder = t.placeholderSkills;
-    }
-
-    // 履歴保存（LocalStorage）
-    function saveToHistory(text) {
-        let history = JSON.parse(localStorage.getItem('biddash_history') || '[]');
-        history.unshift({ 
-            text, 
-            date: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) 
-        });
-        history = history.slice(0, 5); // 直近5件
-        localStorage.setItem('biddash_history', JSON.stringify(history));
-        displayHistory();
-    }
-
-    // 履歴表示
-    function displayHistory() {
-        const historyData = JSON.parse(localStorage.getItem('biddash_history') || '[]');
-        if (historyData.length === 0) return;
-        
-        historyArea.innerHTML = historyData.map(item => `
-            <div class="bg-slate-900/30 p-4 rounded-2xl border border-white/5 hover:border-blue-500/30 transition-all cursor-pointer">
-                <p class="text-[9px] text-slate-600 font-bold mb-1 tracking-widest">${item.date}</p>
-                <p class="text-[11px] text-slate-400 truncate font-light leading-relaxed">${item.text}</p>
-            </div>
-        `).join('');
-    }
+        function displayHistory() {
+            const historyData = JSON.parse(localStorage.getItem('biddash_history') || '[]');
+            if (historyData.length === 0) return;
+            historyArea.innerHTML = historyData.map(item => `
+                <div class="bg-slate-900/30 p-4 rounded-2xl border border-white/5 hover:border-blue-500/30 transition-all cursor-pointer">
+                    <p class="text-[9px] text-slate-600 font-bold mb-1 tracking-widest">${item.date}</p>
+                    <p class="text-[11px] text-slate-400 truncate font-light leading-relaxed">${item.text}</p>
+                </div>
+            `).join('');
+        }
     </script>
 </body>
 </html>
