@@ -1,8 +1,9 @@
+require('dotenv').config();
 const http = require('http');
 const https = require('https');
 
 // 【最重要】ここにあなたのOpenAI APIキーを貼り付けてください
-const OPENAI_API_KEY = 'sk-...'; 
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY; 
 
 const server = http.createServer((req, res) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
