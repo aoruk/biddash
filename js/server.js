@@ -113,6 +113,38 @@ Output strictly in JSON format with two keys:
     }
 });
 
+app.post('/translate-skills', async (req, res) => {
+    try {
+        const { skills, targetLang } = req.body;
+        if (!skills || skills.length === 0) return res.json({ skills: [] });
+
+        const systemPrompt = `
+You are an expert multi-lingual data translator.
+Translate the provided array of skill assets into ${getLangName(targetLang)}.
+
+[RULES]
+1. Translate "name", "keywords" (as an array of translated terms), and "achievement" into natural, professional ${getLangName(targetLang)}.
+2. Maintain the exact same "id" for each skill object.
+3. Output strictly in JSON format with a single key "skills" containing the array of translated skill objects. Do not include any markdown blocks.
+`;
+
+        const completion = await openai.chat.completions.create({
+            model: "gpt-4o-mini",
+            messages: [
+                { role: "system", content: systemPrompt },
+                { role: "user", content: JSON.stringify(skills) }
+            ],
+            response_format: { type: "json_object" }
+        });
+
+        const result = JSON.parse(completion.choices[0].message.content);
+        res.json(result);
+    } catch (e) {
+        console.error('Skill Translation Failed:', e);
+        res.status(500).json({ error: 'Skill Translation Failed' });
+    }
+});
+
 app.listen(PORT, () => {
     console.log(`BidDash v2.4.0 Global Engine running at http://localhost:3000`);
 });
