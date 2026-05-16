@@ -1,108 +1,110 @@
-require('dotenv').config();
-const http = require('http');
-const https = require('https');
+import express from 'express';
+import cors from 'cors';
+import { OpenAI } from 'openai';
+import 'dotenv/config';
 
-const server = http.createServer((req, res) => {
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+const app = express();
+const PORT = 3000;
 
-    if (req.method === 'OPTIONS') { res.writeHead(204); res.end(); return; }
+// CORSとJSONパースの設定
+app.use(cors());
+app.use(express.json({ limit: '10mb' }));
 
-    let body = '';
-    req.on('data', chunk => { body += chunk.toString(); });
-    req.on('end', () => {
-        if (!body) return;
-        const parsedBody = JSON.parse(body);
-
-        // 提案書生成ルート
-        if (req.url === '/generate') {
-            const { job, skills, extraStrategy, lang } = parsedBody;
-            
-            // マッチしたスキル構造体をプロンプト用に美しいアセット形式にパース
-            let formattedSkills = "特になし（基本性能で対応）";
-            if (skills && skills.length > 0) {
-                formattedSkills = skills.map(s => `- 【${s.name}】: ${s.achievement}`).join('\n');
-            }
-
-            const prompt = `
-# あなたのアイデンティティ
-あなたは世界を股にかける、獲得率100%の伝説のフリーランスWebエンジニアです。クライアントの募集要項の文脈を完璧に読み解き、競合を圧倒するスマートで刺さる提案文を作成してください。
-
-# 与えられたアセット・武器
-ユーザーのスキルデータベースから、今回の案件に自動マッチングした強力な実績は以下の通りです：
-${formattedSkills}
-
-ユーザーから追加で指定された戦略・条件：
-${extraStrategy || "特になし"}
-
-# 指示
-1. **提案文(proposal)**: 【案件内容】で使用されている言語（英語なら英語、中国語なら中国語）で作成してください。
-   ※注意：アセット情報や追加条件に「M4 Mac」や特定の開発環境、あるいは短納期でのアピールが含まれている場合、それをただ自慢するのではなく、「だからこそクライアントにどう貢献できるか（爆速納品、高パフォーマンステスト等）」という利益（ベネフィット）の文脈に綺麗に昇華させて組み込んでください。
-2. **翻訳(translation)**: 作成した【提案文】の全内容を、指定された言語（${lang}）に一言一句漏らさず正確に翻訳してください。
-   ※もし【提案文】と【指定言語】が全く同じ言語になる場合は、このフィールドは空文字列 "" にしてください。
-
-# 出力形式
-必ず以下の純粋なJSON形式のみで回答してください。解説文などは一切含めないでください。
-{
-  "proposal": "生成した提案書（案件の言語）",
-  "translation": "提案書の全内容の指定言語への翻訳（不要なら空文字）"
-}
-
-【案件内容】:
-${job}`;
-
-            callOpenAI(prompt, true, (result) => {
-                res.writeHead(200, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify(result));
-            });
-        } 
-        // 募集文の即時翻訳ルート
-        else if (req.url === '/translate-source') {
-            const { text, targetLang } = parsedBody;
-            const prompt = `以下のテキストを、指定された言語（${targetLang}）に翻訳してください。余計な解説は不要です。\n\n${text}`;
-            
-            callOpenAI(prompt, false, (result) => {
-                res.writeHead(200, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify({ translatedText: result }));
-            });
-        }
-    });
+// レスポンス全体の文字コードをUTF-8に固定するミドルウェア
+app.use((req, res, next) => {
+    res.setHeader('Content-Type', 'application/json; charset=utf-8');
+    next();
 });
 
-function callOpenAI(prompt, isJson, callback) {
-    const aiReqData = JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [{ role: 'user', content: prompt }],
-        temperature: 0.7,
-        response_format: isJson ? { type: "json_object" } : { type: "text" }
-    });
+const openai = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
+});
 
-    const options = {
-        hostname: 'api.openai.com', port: 443, path: '/v1/chat/completions', method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
-        }
-    };
+// 1. 提案書生成エンドポイント
+app.post('/generate', async (req, res) => {
+    try {
+        const { job, skills, extraStrategy, lang } = req.body;
 
-    const aiReq = https.request(options, (aiRes) => {
-        let aiBody = '';
-        aiRes.on('data', (chunk) => { aiBody += chunk; });
-        aiRes.on('end', () => {
-            try {
-                const aiResponse = JSON.parse(aiBody);
-                const content = aiResponse.choices[0].message.content;
-                callback(isJson ? JSON.parse(content) : content);
-            } catch (e) { 
-                console.error("AI Response Error");
-                callback(isJson ? { proposal: "Error occurred", translation: "" } : "Error occurred");
-            }
+        // 適合したスキル資産のテキスト化
+        const skillsText = skills && skills.length > 0 
+            ? skills.map(s => `- ${s.name}: ${s.achievement}`).join('\n')
+            : 'なし（基本情報のみで構成）';
+
+        const systemPrompt = `
+You are an elite, high-converting business proposal writer for freelancers.
+Your task is to draft a flawless, persuasive, and custom-tailored proposal based on the client's job description, the user's matched internal skill assets, and extra strategic conditions.
+
+[CRITICAL RULE 1]
+Output your final response STRICTLY in valid JSON format with exactly two keys: "proposal" and "translation". Do not include any markdown block markers like \`\`\`json or \`\`\`.
+
+[CRITICAL RULE 2]
+- "proposal": Write the strategic proposal in the target language requested (if target language is 'ja', write in Japanese. If 'en', write in English. If 'zh', write in Chinese).
+- "translation": Provide a full, natural Japanese translation of the generated proposal. If the requested language is already 'ja', leave the "translation" field empty ("").
+
+[CRITICAL RULE 3]
+You must encode the JSON response perfectly in UTF-8. Ensure all multi-byte Japanese characters in the "translation" field are complete and never corrupted or truncated.
+`;
+
+        const userPrompt = `
+[Target Job Description]
+${job}
+
+[User's Matched Skill Assets (Incorporate these naturally as value propositions, not just bragging)]
+${skillsText}
+
+[Extra Strategic Conditions / Nuances]
+${extraStrategy || 'None'}
+
+[Requested Output Language for the Proposal]
+${lang === 'ja' ? 'Japanese' : lang === 'zh' ? 'Chinese' : 'English'}
+`;
+
+        const completion = await openai.chat.completions.create({
+            model: "gpt-4o-mini",
+            messages: [
+                { role: "system", content: systemPrompt },
+                { role: "user", content: userPrompt }
+            ],
+            response_format: { type: "json_object" }
         });
-    });
-    aiReq.write(aiReqData);
-    aiReq.end();
-}
 
-const PORT = 3000;
-server.listen(PORT, () => console.log(`BidDash v2.3 Server running at http://localhost:${PORT}`));
+        // 厳密にUTF-8文字列としてパース
+        const rawResult = completion.choices[0].message.content;
+        const jsonResponse = JSON.parse(Buffer.from(rawResult, 'utf-8').toString('utf-8'));
+
+        res.json(jsonResponse);
+
+    } catch (error) {
+        console.error('Generation Error:', error);
+        res.status(500).json({ error: 'Internal Server Error', details: error.message });
+    }
+});
+
+// 2. 案件募集文のクイック翻訳エンドポイント
+app.post('/translate-source', async (req, res) => {
+    try {
+        const { text, targetLang } = req.body;
+        if (!text) return res.json({ translatedText: '' });
+
+        const completion = await openai.chat.completions.create({
+            model: "gpt-4o-mini",
+            messages: [
+                { 
+                    role: "system", 
+                    content: "You are a professional business translator. Translate the given text into natural, concise Japanese. Output ONLY the translated text, nothing else. Ensure perfect UTF-8 encoding." 
+                },
+                { role: "user", content: text }
+            ]
+        });
+
+        const translatedText = completion.choices[0].message.content.trim();
+        res.json({ translatedText });
+    } catch (error) {
+        console.error('Translation Error:', error);
+        res.status(500).json({ error: 'Translation Failed' });
+    }
+});
+
+app.listen(PORT, () => {
+    console.log(`BidDash v2.3.1 Server running at http://localhost:3000`);
+});
