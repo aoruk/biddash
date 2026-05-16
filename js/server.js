@@ -17,14 +17,40 @@ const server = http.createServer((req, res) => {
 
         // 提案書生成ルート
         if (req.url === '/generate') {
-            const { job, skills, lang } = parsedBody;
+            const { job, skills, extraStrategy, lang } = parsedBody;
+            
+            // マッチしたスキル構造体をプロンプト用に美しいアセット形式にパース
+            let formattedSkills = "特になし（基本性能で対応）";
+            if (skills && skills.length > 0) {
+                formattedSkills = skills.map(s => `- 【${s.name}】: ${s.achievement}`).join('\n');
+            }
+
             const prompt = `
-あなたは世界を股にかける、獲得率100%の伝説のフリーランスWebエンジニアです。
-1. **提案文(proposal)**: 【案件内容】と同じ言語で作成してください。
-2. **翻訳(translation)**: 提案文の全内容を、指定言語（${lang}）に一言一句漏らさず翻訳してください。※同言語なら空文字""。
-出力形式: JSON { "proposal": "...", "translation": "..." }
-【案件内容】: ${job}
-【スキル】: ${skills}`;
+# あなたのアイデンティティ
+あなたは世界を股にかける、獲得率100%の伝説のフリーランスWebエンジニアです。クライアントの募集要項の文脈を完璧に読み解き、競合を圧倒するスマートで刺さる提案文を作成してください。
+
+# 与えられたアセット・武器
+ユーザーのスキルデータベースから、今回の案件に自動マッチングした強力な実績は以下の通りです：
+${formattedSkills}
+
+ユーザーから追加で指定された戦略・条件：
+${extraStrategy || "特になし"}
+
+# 指示
+1. **提案文(proposal)**: 【案件内容】で使用されている言語（英語なら英語、中国語なら中国語）で作成してください。
+   ※注意：アセット情報や追加条件に「M4 Mac」や特定の開発環境、あるいは短納期でのアピールが含まれている場合、それをただ自慢するのではなく、「だからこそクライアントにどう貢献できるか（爆速納品、高パフォーマンステスト等）」という利益（ベネフィット）の文脈に綺麗に昇華させて組み込んでください。
+2. **翻訳(translation)**: 作成した【提案文】の全内容を、指定された言語（${lang}）に一言一句漏らさず正確に翻訳してください。
+   ※もし【提案文】と【指定言語】が全く同じ言語になる場合は、このフィールドは空文字列 "" にしてください。
+
+# 出力形式
+必ず以下の純粋なJSON形式のみで回答してください。解説文などは一切含めないでください。
+{
+  "proposal": "生成した提案書（案件の言語）",
+  "translation": "提案書の全内容の指定言語への翻訳（不要なら空文字）"
+}
+
+【案件内容】:
+${job}`;
 
             callOpenAI(prompt, true, (result) => {
                 res.writeHead(200, { 'Content-Type': 'application/json' });
@@ -68,7 +94,10 @@ function callOpenAI(prompt, isJson, callback) {
                 const aiResponse = JSON.parse(aiBody);
                 const content = aiResponse.choices[0].message.content;
                 callback(isJson ? JSON.parse(content) : content);
-            } catch (e) { console.error("AI Response Error"); }
+            } catch (e) { 
+                console.error("AI Response Error");
+                callback(isJson ? { proposal: "Error occurred", translation: "" } : "Error occurred");
+            }
         });
     });
     aiReq.write(aiReqData);
@@ -76,4 +105,4 @@ function callOpenAI(prompt, isJson, callback) {
 }
 
 const PORT = 3000;
-server.listen(PORT, () => console.log(`BidDash v2.2 Server running at http://localhost:${PORT}`));
+server.listen(PORT, () => console.log(`BidDash v2.3 Server running at http://localhost:${PORT}`));
