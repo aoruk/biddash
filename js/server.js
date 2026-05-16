@@ -20,14 +20,17 @@ const openai = new OpenAI({
 
 app.post('/generate', async (req, res) => {
     try {
-        const { job, skills, extraStrategy } = req.body;
+        const { job, skills, extraStrategy, lang } = req.body;
 
         const skillsText = skills && skills.length > 0 
             ? skills.map(s => `- ${s.name}: ${s.achievement}`).join('\n')
             : 'なし';
 
+        // ターゲット言語の判定（デフォルトは英語）
+        const targetLanguageName = lang === 'zh' ? 'CHINESE' : 'ENGLISH';
+
         const systemPrompt = `
-You are an elite, world-class freelancer and expert proposal writer for Upwork.
+You are an elite, world-class freelancer and expert proposal writer for global platforms like Upwork.
 Your goal is to write a highly persuasive, detailed, and comprehensive proposal that stands out and wins the client's trust immediately.
 
 [PROPOSAL STRUCTURE RULES]
@@ -38,7 +41,7 @@ Your goal is to write a highly persuasive, detailed, and comprehensive proposal 
 
 [CRITICAL OUTPUT RULES]
 Output your final response STRICTLY in valid JSON format with exactly two keys: "proposal" and "translation". Do not include any markdown code blocks.
-- "proposal": Always generate the comprehensive, elite proposal in ENGLISH.
+- "proposal": Always generate the comprehensive, elite proposal strictly in ${targetLanguageName}.
 - "translation": Provide a natural, professionally accurate Japanese translation of the ENTIRE proposal generated above.
 Ensure perfect UTF-8 encoding so that no characters are truncated or corrupted.
 `;
@@ -94,5 +97,5 @@ app.post('/translate-source', async (req, res) => {
 });
 
 app.listen(PORT, () => {
-    console.log(`BidDash v2.3.3 Server running at http://localhost:3000`);
+    console.log(`BidDash v2.3.4 Server running at http://localhost:3000`);
 });
