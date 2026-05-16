@@ -1,6 +1,6 @@
 {
   "name": "biddash",
-  "version": "1.0.0",
+  "version": "2.3.1",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -13,12 +13,15 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
+  "type": "module",
   "bugs": {
     "url": "https://github.com/aoruk/biddash/issues"
   },
   "homepage": "https://github.com/aoruk/biddash#readme",
   "dependencies": {
-    "dotenv": "^17.4.2"
+    "cors": "^2.8.5",
+    "dotenv": "^17.4.2",
+    "express": "^4.19.2",
+    "openai": "^4.52.0"
   }
 }
