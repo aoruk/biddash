@@ -23,5 +23,8 @@
     "dotenv": "^17.4.2",
     "express": "^4.19.2",
     "openai": "^4.52.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.60.0"
   }
 }
