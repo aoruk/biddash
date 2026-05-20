@@ -9,19 +9,29 @@ app.use(express.json());
 
 const openai = new OpenAI();
 
+// フロントのコード（ja, en, zh）と完全に一致させるマッピング
+const langMap = { 
+    'ja': 'Japanese', 
+    'en': 'English', 
+    'zh': 'Chinese' 
+};
+
 /**
  * ====================================================================
- * 【1】 クイック解釈 API（海外募集文を即座に日本語化）
+ * 【1】 クイック解釈 API（中国語UI時も完璧に対応）
  * ====================================================================
  */
 app.post('/translate-text', async (req, res) => {
     try {
-        const { text } = req.body;
+        const { text, userLanguage } = req.body;
         if (!text) return res.status(400).json({ error: 'Text is required' });
 
-        const systemPrompt = `あなたはプロのITフリーランス通訳エンジンです。
-海外のクライアントから送られてきた募集文やメッセージのニュアンスを100%正確に残し、日本の開発者が一瞬で内容を解釈・把握できる極めて自然な「日本語」に翻訳してください。
-「未経験歓迎」「実績不問」などのエンジニアにとって有利なチャンスがあれば、そこを強調して訳してください。解説や挨拶は省き、翻訳本文のみを出力すること。`;
+        const userLangName = langMap[userLanguage] || 'Japanese';
+
+        const systemPrompt = `输入一段文本，请将其极其自然地翻译为用户母语：【${userLangName}】。
+（※If userLanguage is Japanese, translate to Japanese. If English, translate to English. If Chinese, translate to Chinese.）
+如果输入的文本已经是【${userLangName}】，或者完全不需要翻译，请不要输出任何解释或多余的话，直接仅输出 "（翻訳不要 / Same Language）" 这一个词。
+如果需要翻译，请仅输出翻译后的正文内容。`;
 
         const response = await openai.chat.completions.create({
             model: 'gpt-4o-mini',
@@ -41,32 +51,60 @@ app.post('/translate-text', async (req, res) => {
 
 /**
  * ====================================================================
- * 【2】 最強提案書（カバーレター）生成 API（自国語入力 ➔ 英文＋日本語対訳）
+ * 【2】 三カ国語完全対応マトリクス：最強提案書生成 API
  * ====================================================================
  */
 app.post('/generate', async (req, res) => {
     try {
-        const { jobDescription, strategy, skills } = req.body;
+        const { jobDescription, strategy, skills, userLanguage } = req.body;
+        const userLangName = langMap[userLanguage] || 'Japanese';
 
-        const systemPrompt = `あなたはグローバルなフリーランスプラットフォーム（Upwork等）で圧倒的な成約率を誇る、世界最高峰のIT案件獲得エージェントです。
-日本の優秀な開発者が、英語の壁を越えて海外案件を獲得するための「最強の英文カバーレター」を構築してください。
+        // 1. AIに案件募集文が「Japanese」「English」「Chinese」のどれかを厳密に3択で判定させる
+        const detectResponse = await openai.chat.completions.create({
+            model: 'gpt-4o-mini',
+            messages: [
+                { role: 'system', content: "Analyze the language of the given text and return exactly one word from: 'Japanese', 'English', or 'Chinese'. Do not include any punctuation or extra words." },
+                { role: 'user', content: jobDescription }
+            ],
+            temperature: 0.0
+        });
+        
+        let jobLangName = detectResponse.choices[0].message.content.trim();
+        // 万が一の表記ブレ吸収（念のため）
+        if (jobLangName.includes('Japan')) jobLangName = 'Japanese';
+        if (jobLangName.includes('Eng')) jobLangName = 'English';
+        if (jobLangName.includes('Chin')) jobLangName = 'Chinese';
 
-【⚠️出力言語・構成の絶対ガードレール】
-1. 前半部分【提案書本文】は、クライアントへそのままコピペして提出するため、完全に流暢でプロフェッショナルな【英語（English）】のみで執筆してください。
-2. 提案書の最後（末尾）に、必ず「---（水平線）」で区切った上で、日本のユーザーが内容を100%把握・納得して送信できるよう、完璧な【日本語による全文対訳（日本語訳）】をセットで出力してください。
+        // 2. 自国語と案件言語が一致しているかのフラグ判定
+        const isSameLanguage = (userLangName === jobLangName);
+
+        let matrixRulePrompt = "";
+        if (isSameLanguage) {
+            matrixRulePrompt = `【⚠️現在の確定マトリクスルール：同一言語パターン】
+- ユーザーの自国語と案件の言語は、共に【${userLangName}】で完全に一致しています。
+- したがって、提案書（カバーレター）本文は【${userLangName}】のみで執筆してください。
+- 同一言語同士のコミュニケーションであるため、確認用の「---」や翻訳文（対訳）は【絶対に含めないでください】。ピュアな提案書本文のみをシンプルに出力すること。`;
+        } else {
+            matrixRulePrompt = `【⚠️現在の確定マトリクスルール：異言語クロスパターン】
+- ユーザーの自国語は【${userLangName}】、案件のターゲット言語は【${jobLangName}】で異なっています。
+- したがって、前半部分の提案書本文は、クライアントがそのまますぐに読めるよう、完全に【${jobLangName}】のみで執筆してください。
+- 執筆後、必ず末尾に「---（半角ハイフン3つ）」の区切り線を入れ、その後ろにユーザーが内容を100%自己確認するための【${userLangName}訳（対訳）】をセットで出力してください。`;
+        }
+
+        const systemPrompt = `あなたはグローバルな案件獲得プラットフォームで無敗を誇る、世界最高峰のIT提案書（カバーレター）作成エージェントです。
+指定された言語出力を「絶対のガードレール」として厳格に遵守してください。
+
+${matrixRulePrompt}
 
 【アイデンティティと強みへの変換規則】
-・ユーザーのスキル資産や、エリア2に入力された戦略（生い立ち、異業種での経験、未経験の熱意）を読み込み、海外クライアントに刺さる強み（例：「レガシーな悪い癖がないため、最新のReact/Tailwind CSSによるクリーンで高速なモダン開発に105%特化できる」「前職での管理・折衝スキルがあるためコミュニケーションが極めてスムーズ」「GitHubでソースをフル公開しており品質に絶対の自信がある」など）へ強力に変換してアピールに組み込んでください。
-・ただし、嘘の実績（架空の実務経験や、盛った案件数など）を捏造することはハルシネーションとして厳重に禁止します。
-
-【出力フォーマット】
-[プロフェッショナルな英文カバーレター本文（クライアント提出用）]
-
----
-【内容確認用・日本語対訳】
-[上記英文の綺麗な日本語訳]`;
+・ユーザーの保有スキル情報（Skills）や、日本語または他言語で書かれた泥臭い戦略・熱意・生い立ち（Strategy）の内容の「本質」を120%深く読み込み、プロとしての強みへと高度に昇華させて、提案の骨子に組み込んでください。
+・実務実績を嘘偽りで捏造することは厳重に禁止します。`;
 
         const userContent = `
+■ 確定マトリクスパラメータ:
+- ユーザーの自国語 (User Language): ${userLangName}
+- 分析された案件の言語 (Job Language): ${jobLangName}
+
 ■ ターゲットの案件募集文 (Job Description):
 ${jobDescription}
 
@@ -78,12 +116,12 @@ ${strategy || '特になし'}
 `;
 
         const response = await openai.chat.completions.create({
-            model: 'gpt-4o', // 高品質な英文・対比表現のためにメインモデルを使用
+            model: 'gpt-4o', // 高度な三カ国クロス翻訳マッピングのためメインモデルを固定
             messages: [
                 { role: 'system', content: systemPrompt },
                 { role: 'user', content: userContent }
             ],
-            temperature: 0.6
+            temperature: 0.5
         });
 
         res.json({ proposal: response.choices[0].message.content.trim() });
@@ -95,5 +133,5 @@ ${strategy || '特になし'}
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`🚀 BidDash Backend Core Engine running on http://localhost:${PORT}`);
+    console.log(`🚀 BidDash Perfect Multi-Matrix Core Engine running on http://localhost:${PORT}`);
 });

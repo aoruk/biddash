@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BidDash v2.6.0 - Global Business Communication Engine</title>
+    <title>BidDash v2.7.5 - Perfect Multi-Matrix Engine</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <style>
         .glass-panel {
@@ -28,7 +28,7 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
             <div class="flex items-center gap-3">
                 <span class="text-2xl font-black tracking-wider bg-gradient-to-r from-blue-400 via-indigo-400 to-cyan-400 bg-clip-text text-transparent">BidDash</span>
-                <span class="text-xs font-mono px-2 py-0.5 bg-slate-800 rounded-full text-slate-400 border border-slate-700">2.6.0</span>
+                <span class="text-xs font-mono px-2 py-0.5 bg-slate-800 rounded-full text-slate-400 border border-slate-700">2.7.5</span>
             </div>
             
             <div class="flex items-center gap-4">
@@ -59,7 +59,7 @@
                     <textarea id="job-description" class="w-full h-40 bg-slate-900/60 border border-slate-800 rounded-xl p-4 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition resize-none" placeholder="ターゲットのメッセージを貼り付けてください..."></textarea>
                     
                     <div id="quick-analysis-panel" class="hidden border-t border-slate-800/60 pt-4 flex flex-col gap-2">
-                        <h3 id="lbl-quick-analysis" class="text-xs font-bold tracking-wider text-blue-400 uppercase">クイック解釈（日本語翻訳）</h3>
+                        <h3 id="lbl-quick-analysis" class="text-xs font-bold tracking-wider text-blue-400 uppercase">クイック解釈（自国語への翻訳）</h3>
                         <div id="job-translation-text" class="text-xs text-slate-400 leading-relaxed bg-slate-950/40 p-3 rounded-lg border border-slate-900 min-h-[40px] flex items-center"></div>
                     </div>
                 </div>
@@ -83,16 +83,16 @@
 
                         <div id="panel-add-view" class="hidden flex flex-col gap-3 p-1 bg-slate-900/40 rounded-xl border border-slate-900">
                             <div class="flex flex-col gap-1">
-                                <label class="text-[11px] font-bold text-slate-400">スキル名 (例: React, WordPress)</label>
+                                <label class="text-[11px] font-bold text-slate-400">スキル名 (例: React)</label>
                                 <input type="text" id="new-skill-name" class="bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs text-slate-200 focus:outline-none focus:border-blue-500" placeholder="スキル名を入力...">
                             </div>
                             <div class="flex flex-col gap-1">
                                 <label class="text-[11px] font-bold text-slate-400">実績・アピール文（日本語でOK）</label>
-                                <textarea id="new-skill-achievement" class="bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs text-slate-200 h-16 resize-none focus:outline-none focus:border-blue-500" placeholder="Hooksを用いたSPA開発が可能です、など..."></textarea>
+                                <textarea id="new-skill-achievement" class="bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs text-slate-200 h-16 resize-none focus:outline-none focus:border-blue-500" placeholder="Hooksを用いたSPA開発が可能です..."></textarea>
                             </div>
                             <div class="flex flex-col gap-1">
                                 <label class="text-[11px] font-bold text-slate-400">自動マッチング用キーワード (カンマ区切り)</label>
-                                <input type="text" id="new-skill-keywords" class="bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs text-slate-200 focus:outline-none focus:border-blue-500" placeholder="react, spa, frontend">
+                                <input type="text" id="new-skill-keywords" class="bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs text-slate-200 focus:outline-none focus:border-blue-500" placeholder="react, spa">
                             </div>
                             <button id="add-skill-submit" class="w-full py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-lg transition mt-1">データベースに保存</button>
                         </div>
@@ -101,11 +101,11 @@
 
                 <div class="glass-panel rounded-2xl p-6 flex flex-col gap-4">
                     <h2 id="lbl-strategy" class="text-sm font-semibold tracking-wide text-slate-400">2. 戦略 / カスタム追加機能（生い立ち・経験・熱意など）</h2>
-                    <textarea id="strategy-input" class="w-full h-32 bg-slate-900/60 border border-slate-800 rounded-xl p-4 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition resize-none" placeholder="あなたの生い立ち、異業種での経験、未経験ならではの熱意、または特定の交渉材料を『日本語』で自由に入力してください。AIがグローバル向けのアピールに変換します..."></textarea>
+                    <textarea id="strategy-input" class="w-full h-32 bg-slate-900/60 border border-slate-800 rounded-xl p-4 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition resize-none" placeholder="自国語で思いのままに入力してください..."></textarea>
                 </div>
 
                 <button id="generate-btn" class="glow-button w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-sm rounded-xl shadow-lg shadow-blue-950/50 flex items-center justify-center gap-2 cursor-pointer border border-blue-400/20">
-                    <span id="lbl-btn-generate">英文提案書を即座に作成</span>
+                    <span id="lbl-btn-generate">提案書を即座に作成</span>
                 </button>
 
             </div>
@@ -143,47 +143,47 @@
             ja: {
                 "lbl-job-desc": "1. 案件募集文 / 受信メッセージ",
                 "job-description-placeholder": "ターゲットのメッセージを貼り付けてください...",
-                "lbl-quick-analysis": "クイック解釈（日本語翻訳）",
+                "lbl-quick-analysis": "クイック解釈（自国語への翻訳）",
                 "lbl-skill-db": "スキルデータベース（選択・追加・削除）",
                 "lbl-strategy": "2. 戦略 / カスタム追加機能（生い立ち・経験・熱意など）",
-                "lbl-btn-generate": "英文提案書を即座に作成",
+                "lbl-btn-generate": "提案書を即座に作成",
                 "lbl-output-title": "生成された最強の提案書",
                 "lbl-placeholder-text": "入力パラメータをお待ちしています...",
                 "lbl-history-title": "提案生成履歴",
                 "badge-match": "つの資産が今回の案件に自動適合しました。",
-                "loading-text": "AIが日本語情報から世界水準の英文提案書を錬成中...",
+                "loading-text": "AIが多言語マトリクスを計算して最適な提案書を錬成中...",
                 "copy-btn-text": "クリップボードにコピー",
-                "translating-badge": "日本語訳を取得中..."
+                "translating-badge": "翻訳を取得中..."
             },
             en: {
                 "lbl-job-desc": "1. Job Description / Received Message",
                 "job-description-placeholder": "Paste the client's job description here...",
-                "lbl-quick-analysis": "Quick Interpretation (Japanese Translation)",
+                "lbl-quick-analysis": "Quick Interpretation (Translation to Native)",
                 "lbl-skill-db": "Skill Database (Select/Add/Delete)",
                 "lbl-strategy": "2. Strategy / Custom Additions (Background, Story, Passion)",
-                "lbl-btn-generate": "Generate English Proposal Immediately",
+                "lbl-btn-generate": "Generate Proposal Immediately",
                 "lbl-output-title": "Generated Prime Proposal",
                 "lbl-placeholder-text": "Waiting for input parameters...",
                 "lbl-history-title": "Proposal Generation History",
                 "badge-match": " asset(s) automatically matched this project.",
-                "loading-text": "Formulating the optimal English proposal from your profile...",
+                "loading-text": "Computing language matrix to formulate optimal proposal...",
                 "copy-btn-text": "Copy to Clipboard",
-                "translating-badge": "Translating to Japanese..."
+                "translating-badge": "Translating..."
             },
             zh: {
                 "lbl-job-desc": "1. 客户需求描述 / 收到消息",
                 "job-description-placeholder": "请在此处粘贴客户的需求内容...",
-                "lbl-quick-analysis": "快速解析（日语翻译）",
+                "lbl-quick-analysis": "快速解析（翻译为自国语）",
                 "lbl-skill-db": "技能数据资产库（选择 / 添加 / 删除）",
                 "lbl-strategy": "2. 谈判策略 / 自定义附加条件（生い立ち・経験・熱意など）",
-                "lbl-btn-generate": "立即高速生成英文提案",
+                "lbl-btn-generate": "立即高速生成提案",
                 "lbl-output-title": "已生成的顶级提案书",
                 "lbl-placeholder-text": "正在等待输入参数...",
                 "lbl-history-title": "提案生成历史纪录",
                 "badge-match": "个核心资产已自动适配此项目。",
-                "loading-text": "AI引擎正在将您的中文信息精炼为最佳英文提案...",
+                "loading-text": "AI矩阵正在精炼出最适合该国客户的提案书...",
                 "copy-btn-text": "复制到剪贴板",
-                "translating-badge": "正在获取日语翻译..."
+                "translating-badge": "正在获取翻译..."
             }
         };
 
@@ -203,14 +203,12 @@
         const quickAnalysisPanel = document.getElementById('quick-analysis-panel');
         const jobTranslationText = document.getElementById('job-translation-text');
         
-        // タブおよびビュー要素
         const tabListBtn = document.getElementById('tab-list-btn');
         const tabAddBtn = document.getElementById('tab-add-btn');
         const panelListView = document.getElementById('panel-list-view');
         const panelAddView = document.getElementById('panel-add-view');
         const lblNoMatch = document.getElementById('lbl-no-match');
 
-        // 1. スキル初期化（選択状態 `checked: true` を保持するように拡張）
         function initSkills() {
             const localData = localStorage.getItem('biddash_skills_v3');
             if (localData) {
@@ -226,7 +224,6 @@
             renderSkills();
         }
 
-        // 2. スキルレンダリング（チェックボックス・削除ボタン付き）
         function renderSkills() {
             skillListView.innerHTML = '';
             if (skillDatabase.length === 0) {
@@ -258,25 +255,18 @@
                 skillListView.appendChild(card);
             });
 
-            // イベントバインドの再セット
-            document.querySelectorAll('.skill-checkbox').forEach(cb => {
-                cb.addEventListener('change', toggleSkillCheck);
-            });
-            document.querySelectorAll('.skill-delete-btn').forEach(btn => {
-                btn.addEventListener('click', deleteSkill);
-            });
+            document.querySelectorAll('.skill-checkbox').forEach(cb => cb.addEventListener('change', toggleSkillCheck));
+            document.querySelectorAll('.skill-delete-btn').forEach(btn => btn.addEventListener('click', deleteSkill));
         }
 
-        // 3. チェックボックス切り替え処理
         function toggleSkillCheck(e) {
             const index = e.target.getAttribute('data-index');
             skillDatabase[index].checked = e.target.checked;
             localStorage.setItem('biddash_skills_v3', JSON.stringify(skillDatabase));
-            renderSkills(); // 表示をリフレッシュ（不透明度の変更など）
-            triggerRealtimeMatching(); // マッチングバッジの再計算
+            renderSkills();
+            triggerRealtimeMatching();
         }
 
-        // 4. スキル削除処理
         function deleteSkill(e) {
             const index = e.target.getAttribute('data-index');
             if (confirm(`スキル「${skillDatabase[index].name}」を削除してもよろしいですか？`)) {
@@ -287,44 +277,26 @@
             }
         }
 
-        // 5. スキル新規追加処理
         document.getElementById('add-skill-submit').addEventListener('click', () => {
             const name = document.getElementById('new-skill-name').value.trim();
             const achievement = document.getElementById('new-skill-achievement').value.trim();
             const kwInput = document.getElementById('new-skill-keywords').value.trim();
 
-            if (!name || !achievement) {
-                alert('スキル名と実績・アピール文は必須です。');
-                return;
-            }
-
-            // キーワードを配列化（カンマ区切り、空白除去、空文字除外）
+            if (!name || !achievement) return alert('スキル名と実績・アピール文は必須です。');
             const keywords = kwInput ? kwInput.split(',').map(k => k.trim()).filter(k => k) : [name.toLowerCase()];
 
-            const newSkill = {
-                id: "s_" + Date.now(),
-                name: name,
-                achievement: achievement,
-                keywords: keywords,
-                checked: true // 新規はデフォルトON
-            };
-
-            skillDatabase.push(newSkill);
+            skillDatabase.push({ id: "s_" + Date.now(), name: name, achievement: achievement, keywords: keywords, checked: true });
             localStorage.setItem('biddash_skills_v3', JSON.stringify(skillDatabase));
             
-            // フォームクリア
             document.getElementById('new-skill-name').value = '';
             document.getElementById('new-skill-achievement').value = '';
             document.getElementById('new-skill-keywords').value = '';
 
-            // 一覧ビューに戻してリフレッシュ
             switchTab('list');
             renderSkills();
             triggerRealtimeMatching();
-            alert('新しいスキル資産をデータベースに登録しました！');
         });
 
-        // タブ切り替えロジック
         function switchTab(tab) {
             if (tab === 'list') {
                 tabListBtn.className = "px-4 py-2 text-xs font-bold border-b-2 border-blue-500 text-blue-400 cursor-pointer";
@@ -341,8 +313,6 @@
         tabListBtn.addEventListener('click', () => switchTab('list'));
         tabAddBtn.addEventListener('click', () => switchTab('add'));
 
-
-        // 6. UI言語および翻訳の同期
         async function applyLanguageAndTranslation(targetLang) {
             currentLang = targetLang;
             const dict = i18n[targetLang];
@@ -373,7 +343,6 @@
             }
         }
 
-        // マッチングバッジ（チェックが入っている有効なスキルのみを計算対象にする）
         function triggerRealtimeMatching() {
             const text = jobDescInput.value.toLowerCase();
             if (!text) {
@@ -383,7 +352,7 @@
 
             let matchCount = 0;
             skillDatabase.forEach(skill => {
-                if (skill.checked) { // ★チェックが入っているものだけ
+                if (skill.checked) {
                     const hasMatch = skill.keywords.some(kw => text.includes(kw.toLowerCase()));
                     if (hasMatch) matchCount++;
                 }
@@ -397,6 +366,7 @@
             }
         }
 
+        // 🌟 クイック翻訳要求時にも userLanguage を含めるように強化！
         async function requestJobTranslation() {
             const textToTranslate = jobDescInput.value.trim();
             if (!textToTranslate) return;
@@ -408,20 +378,28 @@
                 const response = await fetch('http://localhost:3000/translate-text', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ text: textToTranslate })
+                    body: JSON.stringify({ 
+                        text: textToTranslate,
+                        userLanguage: currentLang // ★自国語をセット
+                    })
                 });
 
                 if (!response.ok) throw new Error('Translation API error');
                 const data = await response.json();
-                jobTranslationText.textContent = data.translatedText;
+                
+                // もし「(翻訳不要)」フラグが返ってきたら、パネルごと非表示にするスマート制御
+                if (data.translatedText.includes("(翻訳不要") || data.translatedText.includes("Same Language")) {
+                    quickAnalysisPanel.classList.add('hidden');
+                    jobTranslationText.textContent = '';
+                } else {
+                    jobTranslationText.textContent = data.translatedText;
+                }
 
             } catch (err) {
-                console.error("❌ クイック翻訳失敗:", err);
-                jobTranslationText.textContent = "（バックエンド翻訳サーバーがオフラインのため、自動翻訳を表示できません）";
+                jobTranslationText.textContent = "（自動翻訳サーバーエラー）";
             }
         }
 
-        // 提案生成（★チェックが入っているスキルだけをフィルタリングして送信）
         async function generateProposal() {
             const jobText = jobDescInput.value.trim();
             const strategyText = strategyInput.value.trim();
@@ -433,7 +411,6 @@
             loadingSpinner.classList.remove('hidden');
             document.getElementById('lbl-placeholder-text').textContent = i18n[currentLang]["loading-text"];
 
-            // チェックの入っているスキルのみを抽出
             const activeSkills = skillDatabase.filter(skill => skill.checked);
 
             try {
@@ -443,7 +420,8 @@
                     body: JSON.stringify({
                         jobDescription: jobText,
                         strategy: strategyText,
-                        skills: activeSkills // 有効なスキルだけを送信！
+                        skills: activeSkills,
+                        userLanguage: currentLang
                     })
                 });
 
