@@ -1,150 +1,99 @@
 import express from 'express';
 import cors from 'cors';
-import { OpenAI } from 'openai';
 import 'dotenv/config';
+import { OpenAI } from 'openai';
 
 const app = express();
-const PORT = 3000;
-
 app.use(cors());
-app.use(express.json({ limit: '10mb' }));
+app.use(express.json());
 
-app.use((req, res, next) => {
-    res.setHeader('Content-Type', 'application/json; charset=utf-8');
-    next();
-});
+const openai = new OpenAI();
 
-const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
-});
-
-// 言語コードから言語名へのマッピング
-const getLangName = (code) => {
-    if (code === 'en') return 'ENGLISH';
-    if (code === 'zh') return 'CHINESE';
-    return 'JAPANESE';
-};
-
-app.post('/generate', async (req, res) => {
+/**
+ * ====================================================================
+ * 【1】 クイック解釈 API（海外募集文を即座に日本語化）
+ * ====================================================================
+ */
+app.post('/translate-text', async (req, res) => {
     try {
-        const { job, skills, extraStrategy, userLang } = req.body;
+        const { text } = req.body;
+        if (!text) return res.status(400).json({ error: 'Text is required' });
 
-        const skillsText = skills && skills.length > 0 
-            ? skills.map(s => `- ${s.name}: ${s.achievement}`).join('\n')
-            : 'None';
+        const systemPrompt = `あなたはプロのITフリーランス通訳エンジンです。
+海外のクライアントから送られてきた募集文やメッセージのニュアンスを100%正確に残し、日本の開発者が一瞬で内容を解釈・把握できる極めて自然な「日本語」に翻訳してください。
+「未経験歓迎」「実績不問」などのエンジニアにとって有利なチャンスがあれば、そこを強調して訳してください。解説や挨拶は省き、翻訳本文のみを出力すること。`;
 
-        const systemPrompt = `
-You are an elite, world-class freelancer and expert proposal writer for global platforms.
-Analyze the user's input language and the language used in the Client's Job Description.
-
-[TASK]
-1. Detect the language of the Client's Job Description.
-2. Write a highly persuasive, comprehensive proposal strictly in the SAME language as the Client's Job Description to ensure it matches the client's expectation.
-3. Structure: Hook (customized opening), Solution & Approach, Value Proposition (weave in skills), and Call to Action.
-4. Translation Rule:
-   - If the detected job language is DIFFERENT from the user's language (${getLangName(userLang)}), provide a natural translation of the proposal into ${getLangName(userLang)} under the "translation" key.
-   - If the detected job language is the SAME as the user's language (${getLangName(userLang)}), set the "translation" key to an empty string "".
-
-[CRITICAL OUTPUT RULES]
-Output strictly in JSON format with exactly two keys: "proposal" and "translation". Do not include any markdown blocks.
-`;
-
-        const userPrompt = `
-[User's Language Context]
-${getLangName(userLang)}
-
-[Client's Job Description]
-${job}
-
-[User's Matched Skill Assets to Inject]
-${skillsText}
-
-[Extra Strategic Nuances from User]
-${extraStrategy || 'None'}
-`;
-
-        const completion = await openai.chat.completions.create({
-            model: "gpt-4o-mini",
+        const response = await openai.chat.completions.create({
+            model: 'gpt-4o-mini',
             messages: [
-                { role: "system", content: systemPrompt },
-                { role: "user", content: userPrompt }
+                { role: 'system', content: systemPrompt },
+                { role: 'user', content: text }
             ],
-            response_format: { type: "json_object" }
+            temperature: 0.2
         });
 
-        const rawResult = completion.choices[0].message.content;
-        const jsonResponse = JSON.parse(Buffer.from(rawResult, 'utf-8').toString('utf-8'));
-
-        res.json(jsonResponse);
-
+        res.json({ translatedText: response.choices[0].message.content.trim() });
     } catch (error) {
-        console.error('Generation Error:', error);
+        console.error('❌ /translate-text Error:', error);
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
 
-app.post('/analyze-source', async (req, res) => {
+/**
+ * ====================================================================
+ * 【2】 最強提案書（カバーレター）生成 API（自国語入力 ➔ 英文＋日本語対訳）
+ * ====================================================================
+ */
+app.post('/generate', async (req, res) => {
     try {
-        const { text, userLang } = req.body;
-        if (!text) return res.json({ shouldTranslate: false, translatedText: '' });
+        const { jobDescription, strategy, skills } = req.body;
 
-        const systemPrompt = `
-Analyze the language of the provided text.
-Compare it with the user's native language: ${getLangName(userLang)}.
+        const systemPrompt = `あなたはグローバルなフリーランスプラットフォーム（Upwork等）で圧倒的な成約率を誇る、世界最高峰のIT案件獲得エージェントです。
+日本の優秀な開発者が、英語の壁を越えて海外案件を獲得するための「最強の英文カバーレター」を構築してください。
 
-Output strictly in JSON format with two keys:
-- "isSameLanguage": boolean (true if the text is primarily in the user's native language, false otherwise)
-- "translatedText": string (If isSameLanguage is false, provide a professional translation/summary into the user's language. If true, return empty string "")
+【⚠️出力言語・構成の絶対ガードレール】
+1. 前半部分【提案書本文】は、クライアントへそのままコピペして提出するため、完全に流暢でプロフェッショナルな【英語（English）】のみで執筆してください。
+2. 提案書の最後（末尾）に、必ず「---（水平線）」で区切った上で、日本のユーザーが内容を100%把握・納得して送信できるよう、完璧な【日本語による全文対訳（日本語訳）】をセットで出力してください。
+
+【アイデンティティと強みへの変換規則】
+・ユーザーのスキル資産や、エリア2に入力された戦略（生い立ち、異業種での経験、未経験の熱意）を読み込み、海外クライアントに刺さる強み（例：「レガシーな悪い癖がないため、最新のReact/Tailwind CSSによるクリーンで高速なモダン開発に105%特化できる」「前職での管理・折衝スキルがあるためコミュニケーションが極めてスムーズ」「GitHubでソースをフル公開しており品質に絶対の自信がある」など）へ強力に変換してアピールに組み込んでください。
+・ただし、嘘の実績（架空の実務経験や、盛った案件数など）を捏造することはハルシネーションとして厳重に禁止します。
+
+【出力フォーマット】
+[プロフェッショナルな英文カバーレター本文（クライアント提出用）]
+
+---
+【内容確認用・日本語対訳】
+[上記英文の綺麗な日本語訳]`;
+
+        const userContent = `
+■ ターゲットの案件募集文 (Job Description):
+${jobDescription}
+
+■ ユーザーの保有スキル資産 (Skills):
+${JSON.stringify(skills)}
+
+■ ユーザーの生い立ち・経験・熱意・戦略 (Strategy & Narrative):
+${strategy || '特になし'}
 `;
 
-        const completion = await openai.chat.completions.create({
-            model: "gpt-4o-mini",
+        const response = await openai.chat.completions.create({
+            model: 'gpt-4o', // 高品質な英文・対比表現のためにメインモデルを使用
             messages: [
-                { role: "system", content: systemPrompt },
-                { role: "user", content: text }
+                { role: 'system', content: systemPrompt },
+                { role: 'user', content: userContent }
             ],
-            response_format: { type: "json_object" }
+            temperature: 0.6
         });
 
-        const result = JSON.parse(completion.choices[0].message.content);
-        res.json(result);
-    } catch (e) {
-        res.status(500).json({ error: 'Analysis Failed' });
+        res.json({ proposal: response.choices[0].message.content.trim() });
+    } catch (error) {
+        console.error('❌ /generate Error:', error);
+        res.status(500).json({ error: 'Proposal generation failed' });
     }
 });
 
-app.post('/translate-skills', async (req, res) => {
-    try {
-        const { skills, targetLang } = req.body;
-        if (!skills || skills.length === 0) return res.json({ skills: [] });
-
-        const systemPrompt = `
-You are an expert multi-lingual data translator.
-Translate the provided array of skill assets into ${getLangName(targetLang)}.
-
-[RULES]
-1. Translate "name", "keywords" (as an array of translated terms), and "achievement" into natural, professional ${getLangName(targetLang)}.
-2. Maintain the exact same "id" for each skill object.
-3. Output strictly in JSON format with a single key "skills" containing the array of translated skill objects. Do not include any markdown blocks.
-`;
-
-        const completion = await openai.chat.completions.create({
-            model: "gpt-4o-mini",
-            messages: [
-                { role: "system", content: systemPrompt },
-                { role: "user", content: JSON.stringify(skills) }
-            ],
-            response_format: { type: "json_object" }
-        });
-
-        const result = JSON.parse(completion.choices[0].message.content);
-        res.json(result);
-    } catch (e) {
-        console.error('Skill Translation Failed:', e);
-        res.status(500).json({ error: 'Skill Translation Failed' });
-    }
-});
-
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`BidDash v2.4.0 Global Engine running at http://localhost:3000`);
+    console.log(`🚀 BidDash Backend Core Engine running on http://localhost:${PORT}`);
 });
